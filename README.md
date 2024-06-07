@@ -25,9 +25,13 @@ $ cmake --build build
 $ (cd build && ctest)
 ```
 
+## Progress
+- On section 3.3 of the spec. I can read the chunk but I have not tested this at all. First spit out the chunk data for the example image and compare to the chunk data from the website. Then write a unittest to do all this.
+
 ## Supported Features
 
 ## Unsupported Features
 
 ## Resources
 - [PNG Specification](http://www.libpng.org/pub/png/spec/1.2/PNG-Contents.html)
+- [PNG file chunk inspector](https://www.nayuki.io/page/png-file-chunk-inspector)

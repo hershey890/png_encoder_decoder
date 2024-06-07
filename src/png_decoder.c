@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include "png_decoder.h"
 
 /**
@@ -23,6 +24,38 @@ static int readSignature(FILE* file) {
 
     return 0;
     #undef SIGNATURE_SIZE
+}
+
+/**
+ * Reads a PNG chunk
+ * @param file The PNG file pointer
+ * @return 0 if successful, -3 if failed
+ */
+static int readChunk(FILE* file, uint32_t* length, uint32_t* type, uint8_t** data, uint32_t* crc) {
+    // Read length
+    if(fread(length, sizeof(length), 1, file) != 1)
+        return -3;
+
+    // Read type
+    if(fread(type, sizeof(type), 1, file) != 1)
+        return -3;
+
+    // Read data
+    if(*length == 0) {
+        *data = NULL;
+        return 0;
+    }
+    if((*data = (uint8_t*)malloc(*length)) == NULL)
+        return -3;
+    if(fread(*data, 1, *length, file) != *length)
+        return -3;
+
+    // Read CRC
+    if(fread(crc, sizeof(crc), 1, file) != 1)
+        return -3;
+    // TODO: actually check the CRC. The spec contains code for checking the CRC
+
+    return 0;
 }
 
 /**
@@ -52,6 +85,15 @@ int decodePNG(const char* filename) {
         return -1;
     
     if((res = readSignature(file)) != 0) {
+        fclose(file);
+        return res;
+    }
+
+    uint32_t length;
+    uint32_t type;
+    uint8_t *data;
+    uint32_t crc;
+    if((res = readChunk(file, &length, &type, &data, &crc)) != 0) {
         fclose(file);
         return res;
     }
