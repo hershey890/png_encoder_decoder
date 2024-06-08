@@ -1,3 +1,9 @@
+#ifndef GOOGLE_TEST
+    #define STATIC static
+#else
+    #define STATIC
+#endif
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -8,7 +14,7 @@
  * @param file The PNG file pointer
  * @return 0 if successful, -2 if failed
  */
-static int readSignature(FILE* file) {
+STATIC int readSignature(FILE* file) {
     #define SIGNATURE_SIZE 8
     const uint8_t expected_signature[SIGNATURE_SIZE] = {
         137, 80, 78, 71, 13, 10, 26, 10
@@ -31,7 +37,7 @@ static int readSignature(FILE* file) {
  * @param file The PNG file pointer
  * @return 0 if successful, -3 if failed
  */
-static int readChunk(FILE* file, uint32_t* length, uint32_t* type, uint8_t** data, uint32_t* crc) {
+STATIC int readChunk(FILE* file, uint32_t* length, uint32_t* type, uint8_t** data, uint32_t* crc) {
     // Read length
     if(fread(length, sizeof(length), 1, file) != 1)
         return -3;
@@ -63,7 +69,7 @@ static int readChunk(FILE* file, uint32_t* length, uint32_t* type, uint8_t** dat
  * @param file The PNG file pointer
  * @return 0 if successful, -3 if failed
  */
-// static int readIHDR(FILE* file) {
+// STATIC int readIHDR(FILE* file) {
 //     // Read the IHDR chunk
 //     const size_t IHDR_SIZE = 13;
 //     uint8_t ihdr[IHDR_SIZE];
@@ -89,14 +95,14 @@ int decodePNG(const char* filename) {
         return res;
     }
 
-    uint32_t length;
-    uint32_t type;
-    uint8_t *data;
-    uint32_t crc;
-    if((res = readChunk(file, &length, &type, &data, &crc)) != 0) {
-        fclose(file);
-        return res;
-    }
+    // uint32_t length;
+    // uint32_t type;
+    // uint8_t *data;
+    // uint32_t crc;
+    // if((res = readChunk(file, &length, &type, &data, &crc)) != 0) {
+    //     fclose(file);
+    //     return res;
+    // }
 
     fclose(file);
     return 0;
