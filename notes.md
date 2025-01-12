@@ -30,7 +30,6 @@
         - TODO/ignore
     - Text strings
         - TODO/ignore
-    
 
 ## Plan to Support
 - Grayscale

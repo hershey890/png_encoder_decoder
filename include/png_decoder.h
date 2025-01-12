@@ -8,9 +8,7 @@ extern "C" {
 /**
  * Decodes a PNG file
  * @param filename The PNG file to decode
- * @return 0 if successful. For failures:
- *      -1: File could not be opened
- *      -2: File is not a PNG file
+ * @return 0 if successful, negative value for failure
  */
 int decodePNG(const char* filename);
 
