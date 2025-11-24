@@ -1,26 +1,28 @@
-#ifndef GOOGLE_TEST
-    #define STATIC static
-#else
-    #define STATIC
-#endif
-
 #define PNG_LOG_ERROR
 
+
+/************************************************************************
+ * INCLUDES
+ ************************************************************************/
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include <errno.h>
 #include "png_logger.h"
-#include "png_types_macros.h"
 #include "png_errors.h"
 #include "png_decoder.h"
+#include "png_validate.h"
+#include "png_types_macros.h"
 
+
+/************************************************************************
+ * STATIC FUNCTIONS
+ ************************************************************************/
 /**
  * Reads the PNG file signature to verify file is a PNG file
  * @param file The PNG file pointer
  * @return 0 if successful, -ESIGNATURE if fails
  */
-STATIC int readSignature(FILE* file) {
+static int readSignature(FILE* file) {
     #define SIGNATURE_SIZE 8
     const uint8_t expected_signature[SIGNATURE_SIZE] = {
         137, 80, 78, 71, 13, 10, 26, 10
@@ -47,14 +49,13 @@ STATIC int readSignature(FILE* file) {
  * @param chunk
  * @return 0 if successful, -ECHUNK if fails
  */
-// STATIC int readChunk(FILE* file, uint32_t* length, uint32_t* type, uint8_t** data, uint32_t* crc) {
-STATIC int readChunk(FILE* file, chunk_t* chunk) {
+static int readChunk(FILE* file, chunk_t* chunk) {
     // Chunk: 4 bytes for length, 4 bytes for chunk type, chunk data, 4 bytes for crc
     if(fread((void*)&chunk->length, sizeof(chunk->length), 1, file) != 1) {
         PNG_LOGE("File too short. Unable to read chunk data bytes");
         return -ECHUNK;
     }
-    chunk->length = REVERSE_UINT_IF_SYS_LITTLE_END(chunk->length);
+    chunk->length = REVERSE_UINT32_IF_SYS_LITTLE_END(chunk->length);
 
     if(fread((void*)&chunk->type, sizeof(chunk->type), 1, file) != 1) {
         PNG_LOGE("readChunk: fread error - Unable to read chunk type.");
@@ -65,7 +66,9 @@ STATIC int readChunk(FILE* file, chunk_t* chunk) {
         chunk->data = NULL;
         return 0;
     }
-    if((chunk->data = (uint8_t*)malloc(chunk->length)) == NULL) {
+
+    chunk->data = (uint8_t*)malloc(chunk->length);
+    if(chunk->data == NULL) {
         PNG_LOGE("readChunk: buffer malloc failed\n");
         return -ECHUNK;
     }
@@ -78,6 +81,8 @@ STATIC int readChunk(FILE* file, chunk_t* chunk) {
         PNG_LOGE("readChunk: fread error - CRC\n");
         return -ECHUNK;
     }
+
+    // TODO: validate that the CRC is correct
 
     return 0;
 }
@@ -102,6 +107,10 @@ STATIC int readChunk(FILE* file, chunk_t* chunk) {
 
 // readIEND
 
+
+/************************************************************************
+ * GLOBAL FUNCTIONS
+ ************************************************************************/
 int decodePNG(const char* filename) {
     int res = 0;
     FILE *file = fopen(filename, "rb");
@@ -121,7 +130,21 @@ int decodePNG(const char* filename) {
         return res;
     }
     free(chunk.data);
+    
 
     fclose(file);
     return 0;
 }
+
+
+/************************************************************************
+ * TEST FUNCTION EXPORTS
+ ************************************************************************/
+#ifdef GOOGLE_TEST
+
+struct _test_func_export_s _test_func_export = {
+    .readSignature = readSignature,
+    .readChunk = readChunk,
+};
+
+#endif

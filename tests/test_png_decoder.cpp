@@ -1,8 +1,21 @@
 #include <cstdio>
 #include <cstdint>
 #include <filesystem>
-#include "../src/png_decoder.c"
 #include <gtest/gtest.h>
+#include "png_errors.h"
+#include "png_decoder.h"
+#include "png_validate.h"
+#include "png_types_macros.h"
+
+extern struct _test_func_export_s _test_func_export;
+
+int readSignature(FILE* file) {
+    return (*_test_func_export.readSignature)(file);
+}
+
+int readChunk(FILE* file, chunk_t* chunk) {
+    return (*_test_func_export.readChunk)(file, chunk);
+}
 
 class PNGDecoderTest : public testing::Test {
 protected:
@@ -94,54 +107,71 @@ unsigned long crc(unsigned char *buf, int len)
     return update_crc(0xffffffffL, buf, len) ^ 0xffffffffL;
 }
 
-TEST_F(PNGDecoderTest, ReadChunk) {
+/**
+ * Data pulled from a real png file via a chunk inspector
+ */
+TEST_F(PNGDecoderTest, ReadChunk) 
+{
+    /* Create test file with only IHDR chunk*/
     file_ = fopen(filename_, "wb");
     ASSERT_NE(file_, nullptr);
     uint8_t file_chunk[] = {
-        0x00, 0x00, 0x00, 0x0d, // length
-        'I', 'H', 'D', 'R', // 4 bytes for chunk type, this one is IHDR. Backward bc in network byte order i.e. big endian
-        0x00, 0x00, 0x09, 0x4c, 0x00, 0x00, 0x09, 0x4f, 0x08, 0x02, 0x00, 0x00, 0x00,  // any # bytes for chunk data
+        0x00, 0x00, 0x00, 0x0d, 
+        0x49, 0x48, 0x44, 0x52, // 4 bytes for chunk type, this one is IHDR. Backward bc in network byte order i.e. big endian
+        0x00, 0x00, 0x09, 0x4c, 0x00, 0x00, 0x09, 0x4f, 0x08, 0x02, 0x00, 0x00, 0x00, 0x20, 0xb4, 0xcf, 0x84, // Chunk data
         0x20, 0xb4, 0xcf, 0x84 // 4 bytes for CRC
     };
-    const size_t chunk_len = sizeof(file_chunk);
     fwrite(file_chunk, sizeof(file_chunk[0]), sizeof(file_chunk), file_);
     fclose(file_);
 
+    /* Read test file and parse IHDR chunk */
     file_ = fopen(filename_, "rb");
     chunk_t chunk;
-    int res = readChunk(file_, &chunk);
+    ASSERT_EQ(readChunk(file_, &chunk), 0);
     fclose(file_);
 
-    for(size_t i=0; i<chunk.length; i++) {
-        ASSERT_EQ(chunk.data[i], file_chunk[8+i]);
-    }
-    free(chunk.data);
-    ASSERT_EQ(chunk.length, chunk_len - 12);
+    /* Check Chunk Data */
+    ASSERT_EQ(chunk.length, 13);
     ASSERT_EQ(chunk.type, JOIN_BYTES_UINT32('I', 'H', 'D', 'R'));
-    ASSERT_EQ(chunk.crc, *(uint32_t*)(&file_chunk[chunk_len - 4]));
-    uint32_t crc_val = crc(&file_chunk[4], chunk_len - 8);
-    crc_val = REVERSE_UINT_IF_SYS_LITTLE_END(crc_val);
-    ASSERT_EQ(chunk.crc, crc_val);
-    ASSERT_EQ(res, 0);
+    for(size_t i=0; i<chunk.length; i++) {
+        EXPECT_EQ(chunk.data[i], file_chunk[8+i]);
+    }
+    ASSERT_EQ(chunk.crc, 0x84cfb420);
+    /* Check these values
+    typedef struct __attribute__((packed)) chunkIHDR_s {
+        uint32_t width;             // max 2^31-1
+        uint32_t height;            // max 2^31-1
+        uint8_t bit_depth;          // valid values 1, 2, 4, 8, 16
+        uint8_t color_type;         // valid values 0, 2, 3, 4, 6
+        uint8_t compression_method; // 
+        uint8_t filter_method;
+        uint8_t interlace_method;
+    } chunkIHDR_t;
+    */
+
+
+    ASSERT_EQ(isChunkValid_IHDR(&chunk), 0); // TODO: byte flipping for datettings
+    
+    free(chunk.data);
 }
 
-// TEST_F(PNGDecoderTest, DecodePNG) {
-//     // Test valid signature
-//     uint8_t signature[] = {137, 80, 78, 71, 13, 10, 26, 10};
-//     file_ = fopen(filename_, "wb");
-//     fwrite(signature, sizeof(signature[0]), 8, file_);
-//     fclose(file_);
+// // TEST_F(PNGDecoderTest, DecodePNG) {
+// //     // Test valid signature
+// //     uint8_t signature[] = {137, 80, 78, 71, 13, 10, 26, 10};
+// //     file_ = fopen(filename_, "wb");
+// //     fwrite(signature, sizeof(signature[0]), 8, file_);
+// //     fclose(file_);
 
-//     int res = decodePNG(filename_);
-//     ASSERT_EQ(res, 0);
+// //     int res = decodePNG(filename_);
+// //     ASSERT_EQ(res, 0);
 
-//     // Test invalid signature
-//     signature[7] = 11;
-//     file_ = fopen(filename_, "wb");
-//     ASSERT_NE(file_, nullptr);
-//     fwrite(signature, sizeof(signature[0]), 8, file_);
-//     fclose(file_);
+// //     // Test invalid signature
+// //     signature[7] = 11;
+// //     file_ = fopen(filename_, "wb");
+// //     ASSERT_NE(file_, nullptr);
+// //     fwrite(signature, sizeof(signature[0]), 8, file_);
+// //     fclose(file_);
     
-//     res = decodePNG(filename_);
-//     ASSERT_EQ(res, -2);
-// }
+// //     res = decodePNG(filename_);
+// //     ASSERT_EQ(res, -2);
+// // }

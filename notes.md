@@ -1,3 +1,32 @@
+## Building and Running
+For CMake users:
+```
+$ cmake -S . -B build -Wno-dev
+$ cmake --build build
+$ build/main.exe
+```
+The executables will now available in `./build/{sub project name}/`. No manual file download is needed for GoogleTest is needed, the CMake script pulls everything in.
+
+If you do not use Cmake:
+```
+$ gcc -Iinclude -o main.exe src/png_decoder.c src/main.c
+```
+
+## Debugging
+```
+$ cmake -S . -B build -Wno-dev -DCMAKE_BUILD_TYPE=Debug
+$ cmake --build build
+$ build/main.exe
+```
+
+## Testing
+(Based on [this GoogleTest guide](https://google.github.io/googletest/quickstart-cmake.html)). To build and run the tests, use the following:  
+```
+$ cmake -S . -B build -Wno-dev
+$ cmake --build build
+$ (cd build && ctest --output-on-failure)
+```
+
 ## Data Representation
 - All integers with > 1 byte are in network byte order: the most significant byte comes first, then the less significant bytes
 - values are typically unsigned. Signed values are in 2's comp
@@ -31,6 +60,11 @@
     - Text strings
         - TODO/ignore
 
+## PNG Data Layout
+```
+[8 bytes PNG file signature][1 IHDR Chunk][>=1 IDAT Chunks][1 IEND Chunk]
+```
+ 
 ## Plan to Support
 - Grayscale
 
@@ -41,3 +75,7 @@
 - Filter types
 - Gamma correction
 - Text stringis
+
+## Progress
+- fix logging in png_logger.h
+- On section 4.1 now, critical chunks

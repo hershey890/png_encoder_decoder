@@ -1,9 +1,10 @@
-#ifndef PNG_ERRORS_H
-#define PNG_ERRORS_H
+#pragma once
 
+/************************************************************************
+ * TYPEDEFS
+ ************************************************************************/
 enum PNG_ERRORS {
     ESIGNATURE=1,
     ECHUNK,
+    ECHUNK_INVALID,
 };
-
-#endif // PNG_ERRORS_H

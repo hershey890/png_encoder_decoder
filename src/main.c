@@ -8,6 +8,10 @@
 #include <stdio.h>
 #include "png_decoder.h"
 
+
+#define PNG_LOG_ERROR
+
+
 int main(void) {
     const char* filename = "images/test.png";
     int res = decodePNG(filename);

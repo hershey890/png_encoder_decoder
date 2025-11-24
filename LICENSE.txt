@@ -1,0 +1,5 @@
+The Don't Use this License
+--------------------------
+I do not give permission to anyone to use this.
+
+Copied the CRC functions from the RFC and need to check on any potential license stuff from the spec.
