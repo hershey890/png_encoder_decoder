@@ -101,14 +101,14 @@ static int readChunk(FILE* file, chunk_t* chunk) {
 
     // Chunk: 4 bytes for length, 4 bytes for chunk type, chunk data, 4 bytes for crc
     if(fread((void*)&chunk->length, sizeof(chunk->length), 1, file) != 1) {
-        PNG_LOGE("File too short. Unable to read chunk data bytes");
-        return -ECHUNK;
+        err = 1;
+        goto cleanup;
     }
     chunk->length = REVERSE_UINT32_IF_SYS_LITTLE_END(chunk->length);
 
     if(fread((void*)&chunk->type, sizeof(chunk->type), 1, file) != 1) {
-        PNG_LOGE("readChunk: fread error - Unable to read chunk type.");
-        return -ECHUNK;
+        err = 2;
+        goto cleanup;
     }
 
     if(chunk->length == 0) {
@@ -118,17 +118,17 @@ static int readChunk(FILE* file, chunk_t* chunk) {
 
     chunk->data = (uint8_t*)malloc(chunk->length);
     if(chunk->data == NULL) {
-        PNG_LOGE("readChunk: buffer malloc failed\n");
-        return -ECHUNK;
+        err = 3;
+        goto cleanup;
     }
     if(fread(chunk->data, 1, chunk->length, file) != chunk->length) {
-        PNG_LOGE("readChunk: fread error - reading chunk failed\n");
-        return -ECHUNK;
+        err = 4;
+        goto cleanup;
     }
 
     if(fread((void*)&chunk->crc, sizeof(chunk->crc), 1, file) != 1) {
-        PNG_LOGE("readChunk: fread error - CRC\n");
-        return -ECHUNK;
+        err = 5;
+        goto cleanup;
     }
 
     /* Validate CRC */
@@ -144,7 +144,7 @@ static int readChunk(FILE* file, chunk_t* chunk) {
     calculated_crc = REVERSE_UINT32_IF_SYS_LITTLE_END(calculated_crc);
 
     if (calculated_crc != chunk->crc) {
-        err = 1;
+        err = 6;
         goto cleanup;
     }
 
