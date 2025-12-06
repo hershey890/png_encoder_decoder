@@ -79,3 +79,6 @@ $ (cd build && ctest --output-on-failure)
 ## Progress
 - fix logging in png_logger.h
 - On section 4.1 now, critical chunks
+
+## Resources
+- File template: https://github.com/EmbeddedArea/c_files_template

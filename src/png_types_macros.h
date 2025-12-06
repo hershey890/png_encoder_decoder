@@ -26,7 +26,7 @@ static const int _n = 1;
  ************************************************************************/
 typedef struct chunk_s {
     uint32_t length;
-    uint32_t type;
+    uint32_t type; /* 4 chars are packed reversed */
     uint8_t* data;
     uint32_t crc;
 

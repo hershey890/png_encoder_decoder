@@ -14,6 +14,10 @@
 #include "png_types_macros.h"
 
 
+/* Table of CRCs of all 8-bit messages. */
+static unsigned long crc_table[256];
+static int crc_table_computed = 0;
+
 /************************************************************************
  * STATIC FUNCTIONS
  ************************************************************************/
@@ -44,12 +48,57 @@ static int readSignature(FILE* file) {
     #undef SIGNATURE_SIZE
 }
 
+/* Make the table for a fast CRC. */
+static void make_crc_table(void) {
+    unsigned long c;
+    int n, k;
+
+    for (n = 0; n < 256; n++) {
+        c = (unsigned long) n;
+        for (k = 0; k < 8; k++) {
+            if (c & 1) {
+                c = 0xedb88320L ^ (c >> 1);
+            } else {
+                c = c >> 1;
+            }
+        }
+        crc_table[n] = c;
+    }
+    crc_table_computed = 1;
+}
+
+/* Update a running CRC with the bytes buf[0..len-1]--the CRC
+    should be initialized to all 1's, and the transmitted value
+    is the 1's complement of the final running CRC (see the
+    crc() routine below)). */
+static unsigned long update_crc(unsigned long crc, unsigned char *buf,
+                        int len) {
+    unsigned long c = crc;
+    int n;
+
+    if (!crc_table_computed) {
+        make_crc_table();
+    }
+    for (n = 0; n < len; n++) {
+        c = crc_table[(c ^ buf[n]) & 0xff] ^ (c >> 8);
+    }
+    return c;
+}
+
+/* Return the CRC of the bytes buf[0..len-1]. */
+__attribute_maybe_unused__ static unsigned long crc(unsigned char *buf, int len) {
+    return update_crc(0xffffffffL, buf, len) ^ 0xffffffffL;
+}
+
 /**
  * Reads a PNG chunk into `data`. Be sure to free `chunk->data` after usage is complete
  * @param chunk
  * @return 0 if successful, -ECHUNK if fails
  */
 static int readChunk(FILE* file, chunk_t* chunk) {
+    int err = 0;
+    chunk->data = NULL;
+
     // Chunk: 4 bytes for length, 4 bytes for chunk type, chunk data, 4 bytes for crc
     if(fread((void*)&chunk->length, sizeof(chunk->length), 1, file) != 1) {
         PNG_LOGE("File too short. Unable to read chunk data bytes");
@@ -82,8 +131,28 @@ static int readChunk(FILE* file, chunk_t* chunk) {
         return -ECHUNK;
     }
 
-    // TODO: validate that the CRC is correct
+    /* Validate CRC */
+    uint8_t type_buf[4] = {
+        (uint8_t)(chunk->type & 0xFF),
+        (uint8_t)((chunk->type >> 8) & 0xFF),
+        (uint8_t)((chunk->type >> 16) & 0xFF),
+        (uint8_t)((chunk->type >> 24) & 0xFF),
+    };
+    unsigned long calculated_crc = update_crc(0xffffffffL, type_buf, 4);
+    calculated_crc = update_crc(calculated_crc, chunk->data, chunk->length);
+    calculated_crc ^= 0xffffffffL;
+    calculated_crc = REVERSE_UINT32_IF_SYS_LITTLE_END(calculated_crc);
 
+    if (calculated_crc != chunk->crc) {
+        err = 1;
+        goto cleanup;
+    }
+
+cleanup:
+    if (err) {
+        PNG_LOGE("readChunk: Failed at point %d\n", err);
+        return -ECHUNK;
+    }
     return 0;
 }
 
