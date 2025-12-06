@@ -86,7 +86,8 @@ static unsigned long update_crc(unsigned long crc, unsigned char *buf,
 }
 
 /* Return the CRC of the bytes buf[0..len-1]. */
-__attribute_maybe_unused__ static unsigned long crc(unsigned char *buf, int len) {
+__attribute_maybe_unused__ 
+static unsigned long crc(unsigned char *buf, int len) {
     return update_crc(0xffffffffL, buf, len) ^ 0xffffffffL;
 }
 
@@ -184,7 +185,7 @@ int decodePNG(const char* filename) {
     int res = 0;
     FILE *file = fopen(filename, "rb");
     if(file == NULL) {
-        return -1;
+        return -EFILE;
     }
     
     if((res = readSignature(file)) != 0) {
@@ -198,9 +199,34 @@ int decodePNG(const char* filename) {
         fclose(file);
         return res;
     }
-    free(chunk.data);
-    
 
+    // switch (chunk.type) {
+    //     case JOIN_BYTES_UINT32('I', 'H', 'D', 'R'):
+    //         readIHDR(chunk.data, chunk.length);
+    //         break;
+    //     case JOIN_BYTES_UINT32('P', 'L', 'T', 'E'):
+    //     case JOIN_BYTES_UINT32('I', 'D', 'A', 'T'):
+    //     case JOIN_BYTES_UINT32('I', 'E', 'N', 'D'):
+    //     case JOIN_BYTES_UINT32('c', 'H', 'R', 'M'):
+    //     case JOIN_BYTES_UINT32('g', 'A', 'M', 'A'):
+    //     case JOIN_BYTES_UINT32('i', 'C', 'C', 'P'):
+    //     case JOIN_BYTES_UINT32('s', 'B', 'I', 'T'):
+    //     case JOIN_BYTES_UINT32('s', 'R', 'G', 'B'):
+    //     case JOIN_BYTES_UINT32('b', 'K', 'G', 'D'):
+    //     case JOIN_BYTES_UINT32('h', 'I', 'S', 'T'):
+    //     case JOIN_BYTES_UINT32('t', 'R', 'N', 'S'):
+    //     case JOIN_BYTES_UINT32('p', 'H', 'Y', 's'):
+    //     case JOIN_BYTES_UINT32('s', 'P', 'L', 'T'):
+    //     case JOIN_BYTES_UINT32('t', 'I', 'M', 'E'):
+    //     case JOIN_BYTES_UINT32('i', 'T', 'X', 't'):
+    //     case JOIN_BYTES_UINT32('t', 'E', 'X', 't'):
+    //     case JOIN_BYTES_UINT32('z', 'T', 'X', 't'):
+    //     default:
+    //         PNG_LOGW("decodePNG: Unknown chunk type: 0x%08X\n", chunk.type);
+    //         break;
+    // }
+
+    free(chunk.data);
     fclose(file);
     return 0;
 }

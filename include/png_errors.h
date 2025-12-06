@@ -4,7 +4,8 @@
  * TYPEDEFS
  ************************************************************************/
 enum PNG_ERRORS {
-    ESIGNATURE=1,
+    EFILE=1,
+    ESIGNATURE,
     ECHUNK,
     ECHUNK_INVALID,
 };

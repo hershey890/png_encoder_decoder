@@ -64,3 +64,46 @@ typedef struct __attribute__((packed)) chunkIHDR_s {
     uint8_t filter_method;
     uint8_t interlace_method;
 } chunkIHDR_t;
+
+typedef enum {
+    CHUNK_IHDR = 0,
+    CHUNK_PLTE = 1,
+    CHUNK_IDAT = 2,
+    CHUNK_IEND = 3,
+    CHUNK_CRITICAL_MAX = 3,
+    CHUNK_cHRM = 4,
+    CHUNK_gAMA = 5,
+    CHUNK_iCCP = 6,
+    CHUNK_sBIT = 7,
+    CHUNK_sRGB = 8,
+    CHUNK_bKGD = 9,
+    CHUNK_hIST = 10,
+    CHUNK_tRNS = 11,
+    CHUNK_pHYs = 12,
+    CHUNK_sPLT = 13,
+    CHUNK_tIME = 14,
+    CHUNK_iTXt = 15,
+    CHUNK_tEXt = 16,
+    CHUNK_zTXt = 17,
+} chunk_type_enum_t;
+
+const uint32_t chunk_type[] = {
+    JOIN_BYTES_UINT32('I', 'H', 'D', 'R'),
+    JOIN_BYTES_UINT32('P', 'L', 'T', 'E'),
+    JOIN_BYTES_UINT32('I', 'D', 'A', 'T'),
+    JOIN_BYTES_UINT32('I', 'E', 'N', 'D'),
+    JOIN_BYTES_UINT32('c', 'H', 'R', 'M'),
+    JOIN_BYTES_UINT32('g', 'A', 'M', 'A'),
+    JOIN_BYTES_UINT32('i', 'C', 'C', 'P'),
+    JOIN_BYTES_UINT32('s', 'B', 'I', 'T'),
+    JOIN_BYTES_UINT32('s', 'R', 'G', 'B'),
+    JOIN_BYTES_UINT32('b', 'K', 'G', 'D'),
+    JOIN_BYTES_UINT32('h', 'I', 'S', 'T'),
+    JOIN_BYTES_UINT32('t', 'R', 'N', 'S'),
+    JOIN_BYTES_UINT32('p', 'H', 'Y', 's'),
+    JOIN_BYTES_UINT32('s', 'P', 'L', 'T'),
+    JOIN_BYTES_UINT32('t', 'I', 'M', 'E'),
+    JOIN_BYTES_UINT32('i', 'T', 'X', 't'),
+    JOIN_BYTES_UINT32('t', 'E', 'X', 't'),
+    JOIN_BYTES_UINT32('z', 'T', 'X', 't'),
+};
