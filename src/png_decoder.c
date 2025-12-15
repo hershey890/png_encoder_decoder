@@ -179,8 +179,7 @@ cleanup:
  * @param p_img[out]
  * @return 0 if successful, -3 if failed
  */
-__attribute_maybe_unused__
-static int readIHDR(chunk_t *p_chunk, image_t *p_img) {
+static int readIHDR(const chunk_t *p_chunk, image_t *p_img) {
     int err = 0;
 
     if (p_chunk == NULL || p_img == NULL || p_chunk->data == NULL) {
@@ -189,6 +188,10 @@ static int readIHDR(chunk_t *p_chunk, image_t *p_img) {
     }
     if (p_chunk->length != sizeof(chunkIHDR_t)) {
         err = 2;
+        goto cleanup;
+    }
+    if (p_chunk->type != CHUNK_IHDR) {
+        err = 3;
         goto cleanup;
     }
 
@@ -205,7 +208,7 @@ static int readIHDR(chunk_t *p_chunk, image_t *p_img) {
 
     int res = isChunkValid_IHDR(p_img);
     if (res != 0) {
-        err = 2 + res;
+        err = 3 + res;
         goto cleanup;
     }
 
@@ -284,6 +287,7 @@ int decodePNG(const char* filename) {
 struct _test_func_export_s _test_func_export = {
     .readSignature = readSignature,
     .readChunk = readChunk,
+    .readIHDR = readIHDR,
 };
 
 #endif

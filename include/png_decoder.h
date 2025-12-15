@@ -26,10 +26,12 @@ int decodePNG(const char* filename);
 #ifdef GOOGLE_TEST
 
 typedef struct chunk_s chunk_t;
+typedef struct image_s image_t;
 
 struct _test_func_export_s {
     int (*readSignature)(FILE* file);
     int (*readChunk)(FILE* file, chunk_t* chunk);
+    int (*readIHDR)(const chunk_t* p_chunk, image_t* p_img);
 };
 #endif
 

@@ -10,7 +10,7 @@ else()
     # add_compiler_options(-O3)
 endif()
 
-set(CMAKE_CXX_FLAGS "-std=c++17")
+set(CMAKE_CXX_FLAGS "-std=c++20")
 set(CMAKE_BUILD_TYPE Debug)
 include_directories(include)
 
@@ -27,7 +27,7 @@ target_link_libraries(main.exe PRIVATE png_decoder)
 ################################
 #           GoogleTest         #
 ################################
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include(FetchContent)

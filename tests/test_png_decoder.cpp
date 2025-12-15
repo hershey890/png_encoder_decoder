@@ -15,12 +15,16 @@ extern struct _test_func_export_s _test_func_export;
 /************************************************************************
  * STATIC FUNCTIONS
  ************************************************************************/
-int readSignature(FILE* file) {
+static int readSignature(FILE* file) {
     return (*_test_func_export.readSignature)(file);
 }
 
-int readChunk(FILE* file, chunk_t* chunk) {
+static int readChunk(FILE* file, chunk_t* chunk) {
     return (*_test_func_export.readChunk)(file, chunk);
+}
+
+static int readIHDR(const chunk_t* p_chunk, image_t* p_img) {
+    return (*_test_func_export.readIHDR)(p_chunk, p_img);
 }
 
 /************************************************************************
@@ -99,6 +103,7 @@ TEST_F(PNGDecoderTest, ReadChunk) {
 
     
     /* Read IHDR Chunk */
+
     // ASSERT_EQ(isChunkValid_IHDR(&chunk), 0); // TODO: byte flipping for datettings
     // chunkIHDR_t* ihdr = (chunkIHDR_t*)chunk.data;
     // ASSERT_EQ(ihdr->width, 2380);
@@ -131,6 +136,35 @@ TEST_F(PNGDecoderTest, ReadChunk) {
     ASSERT_EQ(readChunk(file_, &chunk), -ECHUNK);
     fclose(file_);
     free(chunk.data);
+}
+
+TEST_F(PNGDecoderTest, readIHDR) {
+    image_t img;
+    chunk_t chunk;
+    chunk.length = sizeof(chunkIHDR_t);
+    chunk.type = CHUNK_IHDR;
+    chunkIHDR_t ihdr = {
+        .width = REVERSE_UINT32_IF_SYS_LITTLE_END(800),
+        .height = REVERSE_UINT32_IF_SYS_LITTLE_END(600),
+        .bit_depth = BIT_DEPTH_8,
+        .color_type = COLOR_RGB,
+        .compression_method = COMPRESSION_DEFLATE_INFLATE,
+        .filter_method = FILTER_ADAPTIVE,
+        .interlace_method = INTERLACE_NONE
+    };
+    chunk.data = (uint8_t*)&ihdr;
+    chunk.crc = 0; // Not used in this test
+
+    int res = readIHDR(&chunk, &img);
+    ASSERT_EQ(res, 0);
+    ASSERT_EQ(img.width, 800);
+    ASSERT_EQ(img.height, 600);
+    ASSERT_EQ(img.bit_depth, BIT_DEPTH_8);
+    ASSERT_EQ(img.color_type, COLOR_RGB);
+    ASSERT_EQ(img.compression_method, COMPRESSION_DEFLATE_INFLATE);
+    ASSERT_EQ(img.filter_method, FILTER_ADAPTIVE);
+    ASSERT_EQ(img.interlace_method, INTERLACE_NONE);
+    ASSERT_EQ(img.sample_depth, BIT_DEPTH_8);   
 }
 
 // // TEST_F(PNGDecoderTest, DecodePNG) {
