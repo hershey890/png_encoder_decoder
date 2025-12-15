@@ -82,3 +82,12 @@ $ (cd build && ctest --output-on-failure)
 
 ## Resources
 - File template: https://github.com/EmbeddedArea/c_files_template
+
+## TODO
+1. Add tests for the NULL checks in readChunk
+2. Add tests for the NULL check in readSignature
+3. Add tests for the NULL check in readIHDR
+4. Test readIHDR's NULL checks 
+6. Delete the validation function from png_validate and move in my new validation logic
+7. Test readIHDR's setting of p_img
+8. Test the validation-readIHDR function

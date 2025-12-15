@@ -4,13 +4,23 @@
  */
 #pragma once
 
+/************************************************************************
+ * INCLUDES
+ ************************************************************************/
 #include "png_types_macros.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-int isChunkValid_IHDR(chunk_t* chunk);
+/************************************************************************
+ * GLOBAL FUNCTION DECLARATIONS
+ ************************************************************************/
+/**
+ * @param p_img[in] Uses the fields from chunkIHDR_t
+ * @return 0 for no error, integer > 0 indicating error point
+ */
+int isChunkValid_IHDR(const image_t *p_img);
 
 #ifdef __cplusplus
 }
